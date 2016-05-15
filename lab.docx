@@ -1,0 +1,859 @@
+﻿1)
+
+
+#define _POSIX_SOURCE
+#define _POSIX_C_SOURCE 199309
+#include<stdio.h>
+#include<unistd.h>
+
+int main(void)
+{
+  int res;
+
+  if((res=sysconf(_SC_CLK_TCK))==-1)
+  printf("error\n" );
+  else
+  printf("no of clock tics %d\n",res );
+
+  if((res=sysconf(_SC_CHILD_MAX))==-1)
+  printf("error\n" );
+  else
+  printf("no of child procsses %d\n", res );
+
+  if((res=pathconf("/",_PC_PATH_MAX))==-1)
+  printf("error\n" );
+  else
+  printf("max no of characters in a pathname %d\n",res );
+
+  if((res=pathconf("/",_PC_NAME_MAX))==-1)
+  printf("error\n" );
+  else
+  printf("Max no of chanracters in a file name %d\n",res );
+
+  if((res=sysconf(_SC_OPEN_MAX))==-1)
+  printf("error\n" );
+  else
+  printf("max no of open files %d\n",res );
+
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2)
+#define _POSIX_SOURCE
+#define _POSIX_C_SOURCE 1099309L
+
+#include "stdio.h"
+#include "unistd.h"
+
+int main()
+{
+
+  #ifdef _POSIX_JOB_CONTROL
+  printf("yes\n" );
+  #else
+  printf("no\n");
+  #endif
+
+  #ifdef _POSIX_SAVED_IDS
+  printf("yes\n" );
+  #else
+  printf("np\n" );
+ #endif
+
+  #ifdef _POSIX_CHOWN_RESTRICTED
+  printf("yes\n" );
+  #else
+  printf("no\n" );
+  #endif
+
+  #ifdef _POSIX_NO_TRUNC
+  printf("yes\n" );
+  #else
+  printf("no\n" );
+  #endif
+
+  #ifdef _POSIX_VDISABLE
+  printf("yes\n" );
+  #else
+  printf("no\n" );
+  #endif
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3)
+
+#include<stdio.h>
+
+#include<stdlib.h>
+
+#include<fcntl.h>
+
+#include<unistd.h>
+
+#include<errno.h>
+
+int main(int argc,char *argv[])
+{
+  struct flock f1={F_WRLCK,SEEK_SET,0,100,0};
+  int fd;
+  char buf[50];
+
+  f1.l_pid=getpid();
+
+  if((fd=open(argv[1],O_RDWR))==-1)
+  {
+    perror("cant open the file\n" );
+    exit(1);
+  }
+
+  if(fcntl(fd,F_SETLK,&f1)==-1)
+  {
+    perror("cant set exclusive lock");
+    exit(1);
+  }else if(f1.l_type!=F_UNLCK)
+  {
+    printf("it has been locked\n" );
+
+  }else{
+    printf("its not locked\n" );
+  }
+
+  printf("Please enter to unlock" );
+  getchar();
+  f1.l_type=F_UNLCK;
+  lseek(fd,-100,SEEK_END);
+
+  lseek(fd,50,SEEK_CUR);
+
+  read(fd,buf,50);
+
+  printf("last 50bytes contents is\n");
+
+  printf("%s",buf);
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+4)
+
+#include<stdio.h>
+#include "stdlib.h"
+#include "fcntl.h"
+#include "unistd.h"
+#include "sys/types.h"
+#include "string.h"
+
+int main(int argc,char *argv[])
+{
+  int fd,num1,num2;
+  char buf[100];
+  if(argc==3)
+  {
+    mkfifo(argv[1],0666);
+    fd=open(argv[1],O_WRONLY);
+    num1=write(fd,argv[2],strlen(argv[2]));
+    printf("bytes %d\n",num1 );
+
+
+  }
+
+  if(argc==2)
+  {
+    fd=open(argv[1],O_RDONLY);
+    num2=read(fd,buf,sizeof(buf));
+    buf[num2]='\0';
+    printf("the message size id %d read is %s\n",num2,buf);
+  }
+
+  close(fd);
+  unlink(argv[1]);
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5a)
+
+#include "iostream"
+#include "stdio.h"
+#include "unistd.h"
+
+extern char** environ;
+
+int main()
+{
+  char** var;
+  for(var=environ;*var!=NULL;++var)
+  printf("%s\n",*var );
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5b)
+
+#include "stdio.h"
+#include "unistd.h"
+
+int main(int argc,char* argv[])
+{
+  if(argc!=3)
+  {
+    printf("Error\n" );
+    return 0;
+  }
+
+  if((link(argv[1],argv[2]))==-1)
+  {
+    printf("error\n" );
+    return 1;
+  }
+
+  return 0;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+6)
+
+#include "stdio.h"
+#include "unistd.h"
+#include "stdlib.h"
+
+static void charatatime(char *);
+
+int main(void)
+{
+  pid_t pid;
+
+  if((pid=fork())<0)
+  printf("for error\n" );
+  else if(pid==0)
+  charatatime("Output from child\n");
+  else
+  charatatime("Output from parent\n");
+  exit(0);
+}
+
+static void charatatime(char *str)
+{
+  char *ptr;
+  int c;
+  setbuf(stdout,NULL);
+  for(ptr=str;(c=*ptr++)!=0;)
+  putc(c,stdout);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+7)
+
+
+#include "stdio.h"
+#include "stdlib.h"
+#include "sys/types.h"
+#include "unistd.h"
+
+int main()
+{
+  pid_t child_pid;
+
+  child_pid=fork();
+
+  if(child_pid>0)
+  {
+    printf("this is the parent procsses %d sleep for a min \n",getpid() );
+    sleep(60);
+  }else{
+    printf("this is childprocess %d exit\n",getpid() );
+    exit(0);
+  }
+  system("ps -e -o pid,ppid,stat,cmd");
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+8)
+
+
+#include "stdio.h"
+#include "stdlib.h"
+#include "sys/types.h"
+#include "unistd.h"
+#include "sys/wait.h"
+
+int main()
+{
+  pid_t pid;
+  if((pid=fork())<0)
+  {
+    printf("fork error\n" );
+  }else if(pid==0){
+    printf("first childd pid= %d\n",getpid() );
+    if((pid=fork())<0)
+    printf("fork error\n" );
+    else if(pid >0)
+    exit(0);
+    sleep(1);
+    printf("second shild pid=%d \n parent pid %d\n",getpid(),getppid() );
+    system("ps -o pid,ppid,stat,tty,cmd");
+    exit(1);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+9)
+
+
+
+#include<stdio.h>
+
+#include<sys/wait.h>
+
+#include<errno.h>
+
+#include<stdlib.h>
+
+#include<unistd.h>
+
+int sys(const char *cmdstring)
+{
+  pid_t pid;
+  int status;
+
+  if(cmdstring==NULL)
+  return 1;
+
+  if((pid=fork())<0)
+  {
+    status=-1;
+  }else if(pid==0)
+  {
+    execl("/bin/sh","sh","-c",cmdstring,(char*)0);
+    _exit(127);
+  }else{
+    while (waitpid(pid,&status,0)<0) {
+      /* code */
+      if(errno!=EINTR)
+      {
+        status=-1;
+        break;
+      }
+
+    }
+      return status;
+  }
+
+}
+
+
+int main(int argc,char *argv[])
+{
+  int status;
+  if(argc<2)
+  printf("comd req\n" );
+  if((status=sys(argv[1]))<0)
+  exit(0);
+
+}
+
+
+
+
+
+
+
+
+
+10)
+
+#include "stdio.h"
+#include "unistd.h"
+#include "signal.h"
+#define INTERVAL 5
+
+void callme(int sig_no)
+{
+  alarm(INTERVAL);
+  printf("call handler\n" );
+}
+
+int main()
+{
+  struct sigaction action;
+  sigemptyset(&action.sa_mask);
+  action.sa_handler=(void(*)())callme;
+  action.sa_flags=SA_RESTART;
+
+  if(sigaction(SIGALRM,&action,0)==-1)
+  {
+    perror("sigaction");
+    return 1;
+
+  }
+  if(alarm(INTERVAL)==-1)
+  perror("alarm");
+  else{
+    sleep(10);
+    printf("alarm executed\n" );
+  }
+
+  while(1)
+  {
+  alarm(5);
+  pause();
+  printf("Waiting For Alarm\n");
+  }
+  return 0;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+11)
+
+// VTUCS
+
+/* Write a C program to implement the syntax-directed definition of �if
+E then S1� and �if E then S1 else S2�. */
+
+#include<stdio.h>
+
+#include<stdlib.h>
+
+
+#include<string.h>
+
+int parsecondition(char [],int,char *,int);
+
+void gen(char [],char [], char [],int);
+
+
+int main()
+
+{
+
+int co=0,stlen=0,elseflag=0;
+
+char stmt[60];
+
+char strB[54];
+
+char strs1[50];
+char strs2[45];
+
+printf("format of 'if' statement\nExample\n");
+
+printf("if(a<b) then (s=a);\n");
+
+printf("if(a<b) then (s=a) else (s=b)\n");
+
+printf("Enter the statement\n");
+
+gets(stmt);
+
+stlen=strlen(stmt);
+
+co=co+2;
+
+co=parsecondition(stmt,co,strB,stlen);
+
+if(stmt[co]==')')
+
+co++;
+
+co=co+3;
+
+co=parsecondition(stmt,co,strs1,stlen);
+
+
+
+
+
+
+
+
+
+
+if(stmt[co+1]==';')
+
+{
+printf("\n hi");
+
+printf("\nParsing the input statement...");
+
+gen(strB,strs1,strs2,elseflag);
+
+return 0;
+
+}
+
+if(stmt[co]==')')
+
+co++;
+
+co+=3;
+
+co=parsecondition(stmt,co,strs2,stlen);
+	co+=2;
+if(co==stlen)
+
+{
+
+elseflag=1;
+
+printf("\n Parsing the input statement....");
+gen(strB,strs1,strs2,elseflag);
+
+return 0;
+
+}
+
+}
+int parsecondition(char input[],int cntr,char * dest,int totallen)
+
+{
+
+int index=0,pos=0;
+
+while(input[cntr]!='('&&cntr<=totallen)
+
+cntr++;
+	if(cntr>=totallen)
+
+return 0;
+
+index=cntr;
+
+while(input[cntr]!=')')
+cntr++;
+	if(cntr>=totallen)
+return 0;
+
+while(index<=cntr)
+
+dest[pos++]=input[index++];
+
+dest[pos]='\0';
+	return cntr;
+
+}
+
+
+
+
+
+
+void gen(char B[],char s1[],char s2[],int elsepart)
+
+{
+
+int bt=101,bf=102,sn=103;
+
+printf("\n if%s goto %d",B,bt);
+
+printf("\n goto %d",bf);
+printf("\n %d:",bt);
+
+printf("%s",s1);
+
+if(!elsepart)
+
+printf("\n%d:",bf);
+
+else
+
+{
+
+printf("\ngoto %d",sn);
+
+printf("\n %d:%s",bf,s2);
+
+printf("\n %d:",sn);
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
